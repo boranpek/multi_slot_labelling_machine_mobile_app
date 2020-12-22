@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'model/productList.dart';
+import 'model/product.dart';
+import 'model/machine.dart';
+import 'model/geneticAlgorithm.dart';
+import 'model/slotList.dart';
+import 'model/population.dart';
 
 void main() {
   runApp(MyApp());
@@ -51,9 +57,92 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  
+  static void run() {
+    Product product1 = new Product(200, 0);
+    Product product2 = new Product(150, 1);
+    Product product3 = new Product(80, 2);
+    Product product4 = new Product(60, 3);
+    ProductList.addProduct(product1);
+    ProductList.addProduct(product2);
+    ProductList.addProduct(product3);
+    ProductList.addProduct(product4);
+    
+    Machine.setNumberOfSlotConfig(2);
+    Machine.setSlotNumber(3);
+
+    Population slotLists = new Population(true, 10);
+    List geneticSlotLists = new List(2000);//if u want to try bigger population change 2000
+    SlotList bestSlotList = new SlotList();
+    int temp = 0;
+    for (int i = 0; i < 2000; i++) {//also change here if u change above
+      slotLists = GeneticAlgorithm.evolveSlotLists(slotLists);
+      geneticSlotLists[i] = slotLists.getBestSlotList();
+
+      if ((i % 200) == 0 && i != 0) {//u can change the printing interval
+        int minWaste = 999999;
+        for (int j = 0; j < (200 + (temp * 200));j++) {//also change here if u change above
+          if (geneticSlotLists[j].getWaste() < minWaste) {
+            minWaste = geneticSlotLists[j].getWaste();
+            bestSlotList = geneticSlotLists[j];
+          }
+        }
+
+        Machine.setSlotList(bestSlotList);
+
+        Machine.run(true);
+
+      }
+    }
+    
+
+
+    List products1 = new List();
+    List products2 = new List();
+
+
+
+
+    products1.add(ProductList.getProducts()[0]);
+    products1.add(ProductList.getProducts()[0]);
+    products1.add(ProductList.getProducts()[1]);
+
+
+    products2.add(ProductList.getProducts()[1]);
+    products2.add(ProductList.getProducts()[2]);
+    products2.add(ProductList.getProducts()[3]);
+
+
+
+
+    SlotList testSlotList = new SlotList();
+
+    testSlotList.addProductsToSlot(products1);
+    testSlotList.addProductsToSlot(products2);
+
+    Machine.setSlotList(testSlotList);
+    Machine.run(true);
+
+  }
+
+
+  int calculateTotalWaste() {
+    List waste = new List(ProductList.getProductsNumber());
+    int totalWaste = 0;
+    int producedProduct = 0;
+    for (int i = 0; i < ProductList.getProductsNumber(); i++) {
+      waste[i] = ProductList.getProducts()[i].getAmountOfProduct() - ProductList.getProducts()[i].getDemandOfProduct();
+      print("Product ${i+1}" + " demand: " + ProductList.getProducts()[i].getDemandOfProduct() + " ,produced: " + ProductList.getProducts()[i].getAmountOfProduct() + " waste: " + waste[i] + "\n");
+      totalWaste = totalWaste + waste[i];
+    }
+
+    print("Total waste: $totalWaste" + "\n");
+    return totalWaste;
+  }
 
   void _incrementCounter() {
     setState(() {
+      run();
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
