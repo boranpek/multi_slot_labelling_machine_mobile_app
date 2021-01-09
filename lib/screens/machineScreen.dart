@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_slot_labelling_machine/mixins/validation_mixin.dart';
+import 'package:multi_slot_labelling_machine/model/productList.dart';
 import 'package:multi_slot_labelling_machine/screens/productScreen.dart';
 import 'package:multi_slot_labelling_machine/model/machine.dart';
 
@@ -138,7 +139,8 @@ class _MachineScreenState extends State<MachineScreen> with ValidationMixin, Tic
             backgroundColor: Colors.green,
             textColor: Colors.white,
         );
-        Navigator.pushReplacement(context, MaterialPageRoute(
+        ProductList.resetProductList();
+        Navigator.push(context, MaterialPageRoute(
             builder: (BuildContext context) =>
                 ProductScreen(productNumber: _productNumber,)
         ));

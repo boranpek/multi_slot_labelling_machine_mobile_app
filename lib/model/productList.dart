@@ -14,4 +14,8 @@ class ProductList {
   static int getProductsNumber() {
     return products.length;
   }
+
+  static void resetProductList() {
+    products.clear();
+  }
 }

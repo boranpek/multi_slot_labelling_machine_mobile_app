@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:multi_slot_labelling_machine/mixins/validation_mixin.dart';
@@ -7,6 +8,7 @@ import 'package:multi_slot_labelling_machine/model/population.dart';
 import 'package:multi_slot_labelling_machine/model/product.dart';
 import 'package:multi_slot_labelling_machine/model/productList.dart';
 import 'package:multi_slot_labelling_machine/model/slotList.dart';
+import 'package:multi_slot_labelling_machine/screens/resultScreen.dart';
 
 
 class ProductScreen extends StatefulWidget {
@@ -24,6 +26,8 @@ class _ProductScreenState extends State<ProductScreen> with ValidationMixin, Tic
   final formKey = GlobalKey<FormState>();
   int _productDemand;
   int _productId = 0;
+  int _totalWaste = 0;
+  SlotList _bestSlotForResult = new SlotList();
 
   @override
   void initState() {
@@ -100,9 +104,10 @@ class _ProductScreenState extends State<ProductScreen> with ValidationMixin, Tic
                     children: <Widget>[
                       productDemandField(),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: <Widget>[
                           addProductButton(),
+                          runButton()
                         ],
                       )
                     ],
@@ -110,7 +115,6 @@ class _ProductScreenState extends State<ProductScreen> with ValidationMixin, Tic
                 ),
               ),
               SizedBox(height: 100.0,),
-
             ],
           )
         ],
@@ -150,13 +154,14 @@ class _ProductScreenState extends State<ProductScreen> with ValidationMixin, Tic
       }
 
       else {
+        print(ProductList.getProducts());
         Fluttertoast.showToast(
             msg: "You entered the Product Number: ${widget.productNumber}, so you cannot add more!",
             toastLength: Toast.LENGTH_LONG,
             gravity: ToastGravity.BOTTOM,
             backgroundColor: Colors.red,
             textColor: Colors.white,
-            timeInSecForIosWeb: 5
+            timeInSecForIosWeb: 2
         );
       }
     }
@@ -173,55 +178,67 @@ class _ProductScreenState extends State<ProductScreen> with ValidationMixin, Tic
     );
   }
 
-  static void run() {
+  Widget runButton() {
+    return RaisedButton(
+      child: Text(
+        "Run", style: TextStyle(fontSize: 15.0, color: Colors.white),),
+      color: Colors.green,
+      onPressed: () {
+        if(ProductList.getProductsNumber() == widget.productNumber) {
+          Fluttertoast.showToast(
+            msg: "Machine is running!",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+          );
+          run();
+          Navigator.push(context, MaterialPageRoute(
+              builder: (BuildContext context) =>
+                  ResultScreen(totalWaste: _totalWaste, bestSlotForResult: _bestSlotForResult,)
+          ));
+        }
+        else {
+          Fluttertoast.showToast(
+              msg: "You should add ${widget.productNumber} products!",
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              timeInSecForIosWeb: 2
+          );
+        }
 
+      },
+    );
+  }
+
+  void run() {
     Population slotLists = new Population(true, 10);
     List geneticSlotLists = new List(
         2000); //if u want to try bigger population change 2000
     SlotList bestSlotList = new SlotList();
-    int temp = 0;
+
     for (int i = 0; i < 2000; i++) { //also change here if u change above
       slotLists = GeneticAlgorithm.evolveSlotLists(slotLists);
       geneticSlotLists[i] = slotLists.getBestSlotList();
+    }
 
-      if ((i % 200) == 0 && i != 0) { //u can change the printing interval
-        int minWaste = 999999;
-        for (int j = 0; j <
-            (200 + (temp * 200)); j++) { //also change here if u change above
-          if (geneticSlotLists[j].getWaste() < minWaste) {
-            minWaste = geneticSlotLists[j].getWaste();
-            bestSlotList = geneticSlotLists[j];
-          }
-        }
-
-        Machine.setSlotList(bestSlotList);
-
-        Machine.run(true);
+    int minWaste = 999999;
+    for (int i = 0; i < 2000;i++) {//also change here if u change above
+      if (geneticSlotLists[i].getWaste() < minWaste) {
+        minWaste = geneticSlotLists[i].getWaste();
+        bestSlotList = geneticSlotLists[i];
       }
     }
 
+    Machine.setSlotList(bestSlotList);
 
-    List products1 = new List();
-    List products2 = new List();
-
-
-    products1.add(ProductList.getProducts()[0]);
-    products1.add(ProductList.getProducts()[0]);
-    products1.add(ProductList.getProducts()[1]);
-
-
-    products2.add(ProductList.getProducts()[1]);
-    products2.add(ProductList.getProducts()[2]);
-    products2.add(ProductList.getProducts()[3]);
-
-
-    SlotList testSlotList = new SlotList();
-
-    testSlotList.addProductsToSlot(products1);
-    testSlotList.addProductsToSlot(products2);
-
-    Machine.setSlotList(testSlotList);
     Machine.run(true);
+
+    _totalWaste = calculateTotalWaste();
+    _bestSlotForResult = bestSlotList;
+
   }
 
 
@@ -231,13 +248,9 @@ class _ProductScreenState extends State<ProductScreen> with ValidationMixin, Tic
     for (int i = 0; i < ProductList.getProductsNumber(); i++) {
       waste[i] = ProductList.getProducts()[i].getAmountOfProduct() -
           ProductList.getProducts()[i].getDemandOfProduct();
-      print("Product ${i + 1}" + " demand: " +
-          ProductList.getProducts()[i].getDemandOfProduct() + " ,produced: " +
-          ProductList.getProducts()[i].getAmountOfProduct() + " waste: " +
-          waste[i] + "\n");
+
       totalWaste = totalWaste + waste[i];
     }
-
     print("Total waste: $totalWaste" + "\n");
     return totalWaste;
   }
