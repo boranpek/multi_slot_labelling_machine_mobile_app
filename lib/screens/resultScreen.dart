@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:multi_slot_labelling_machine/model/machine.dart';
+import 'package:multi_slot_labelling_machine/model/product.dart';
 import 'package:multi_slot_labelling_machine/model/productList.dart';
 import 'package:multi_slot_labelling_machine/model/slotList.dart';
 
@@ -13,7 +14,7 @@ class ResultScreen extends StatefulWidget {
   _ResultScreenState createState() => _ResultScreenState();
 }
 
-class _ResultScreenState extends State<ResultScreen> {
+class _ResultScreenState extends State<ResultScreen> with TickerProviderStateMixin{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +45,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   itemCount: ProductList.getProductsNumber(),
                   itemBuilder: (BuildContext context, int index) {
                     return Card(
+                      elevation: 2,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text("Product ${ProductList.getProducts()[index].getProductId() + 1} --> Demand: ${ProductList.getProducts()[index].getDemandOfProduct()}, Produced: ${ProductList.getProducts()[index].getAmountOfProduct()}"),
@@ -54,30 +56,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 SizedBox(
                   height: 30.0,
                 ),
-                ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  itemCount: Machine.getNumberOfSlotConfig(),
-                  itemBuilder: (BuildContext context, int runIndex) {
-                    return ListView.builder(
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      itemCount: Machine.getSlotNumber(),
-                      itemBuilder: (BuildContext context, int slotIndex) {
-                        return Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text("At run ${runIndex + 1}, slot ${slotIndex + 1}: Product ${widget.bestSlotForResult.getSlots()[runIndex][slotIndex].getProductId() + 1}"),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-                SizedBox(
-                  height: 20.0,
-                ),
-                Text("Total waste: ${widget.totalWaste}")
+                _buildTabs(),
               ],
             )
           ],
@@ -100,5 +79,68 @@ class _ResultScreenState extends State<ResultScreen> {
 
     print("Total waste: $totalWaste" + "\n");
     return totalWaste;
+  }
+
+  _buildTabs() {
+    TabController tabController = TabController(length: Machine.getNumberOfSlotConfig(), vsync: this);
+    List<Widget> tabs = [];
+    for(int i = 1;i < Machine.getNumberOfSlotConfig() + 1;i++) {
+      tabs.add(Tab(child: Text("Run $i", style: TextStyle(color: Colors.black),),));
+    }
+    List<Widget> tabBars = new List();
+    String runResult = "";
+    List countProducedProducts = new List(ProductList.getProductsNumber());
+    for(int i = 0; i < ProductList.getProductsNumber();i++) {
+      countProducedProducts[i] = 0;
+    }
+
+    for(int i = 0;i < Machine.getNumberOfSlotConfig();i++) {
+      for (int j = 0; j < Machine.getSlotNumber(); j++) {
+        for (Product product in ProductList.getProducts()) {
+          if (product.getProductId() ==
+              widget.bestSlotForResult.getSlots()[i][j].getProductId()) {
+            countProducedProducts[product.getProductId()]++;
+          }
+        }
+      }
+      runResult = runResult + "${Machine.getCountList()[i]}" + " product produced in each slot.\n\n--Slots--\n";
+      for(int a = 0; a < ProductList.getProductsNumber();a++) {
+        if(countProducedProducts[a] != 0) {
+          runResult = runResult + "Product ${a + 1} in ${countProducedProducts[a]} ${countProducedProducts[a] > 1 ? "slots." : "slot."}\n";
+        }
+      }
+      tabBars.add(ListView(
+        children: [
+          Card(elevation: 2,child: Text(runResult)),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Center(child: Text("Total waste: ${widget.totalWaste}")),
+          ),
+        ],
+      ));
+      runResult = "";
+      for(int i = 0; i < ProductList.getProductsNumber();i++) {
+        countProducedProducts[i] = 0;
+      }
+    }
+
+    return Container(
+      child: Column(
+        children: <Widget>[
+          TabBar(
+            controller: tabController,
+            tabs: tabs
+          ),
+          Container(
+            height: 250.0,
+            padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            child: TabBarView(
+              controller: tabController,
+              children: tabBars
+            ),
+          )
+        ],
+      ),
+    );
   }
 }

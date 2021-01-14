@@ -6,7 +6,11 @@ class Machine {
   static int slotNumber;
   static int numberOfSlotConfig;
   static SlotList slotList;
+  static List countList = new List (numberOfSlotConfig);
 
+  static List getCountList() {
+    return countList;
+  }
 
   static int getSlotNumber() {
     return slotNumber;
@@ -44,7 +48,6 @@ class Machine {
   }
 
   static void run(bool showSteps) {
-    List countList = new List (numberOfSlotConfig);
     for(int i = 0; i < numberOfSlotConfig;i++) {
       countList[i] = 0;
     }

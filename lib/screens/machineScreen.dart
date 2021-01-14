@@ -33,21 +33,37 @@ class _MachineScreenState extends State<MachineScreen> with ValidationMixin, Tic
         children: [
           Column(
             children: [
-              SizedBox(height: 100.0,),
-              Hero(
-                tag: 'rotateWheel',
-                child: SizedBox(
-                  height: 60.0,
-                  width: 60.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage("assets/images/wheel.png"),
-                            fit: BoxFit.fill
-                        )
+              Stack(
+                alignment: Alignment(-0.116,0.18),
+                children: [
+                  SizedBox(
+                    height: 300.0,
+                    width: 400.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: AssetImage("assets/images/machineHand.png"),
+                              fit: BoxFit.fill
+                          )
+                      ),
                     ),
                   ),
-                ),
+                  Hero(
+                    tag: 'rotateWheel',
+                    child: SizedBox(
+                      height: 50.0,
+                      width: 50.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: AssetImage("assets/images/wheel.png"),
+                                fit: BoxFit.fill
+                            )
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               Container(
                 margin: EdgeInsets.all(25.0),
