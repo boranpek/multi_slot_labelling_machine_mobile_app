@@ -52,7 +52,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   },
                 ),
                 SizedBox(
-                  height: 50.0,
+                  height: 30.0,
                 ),
                 ListView.builder(
                   scrollDirection: Axis.vertical,
